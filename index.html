@@ -38,7 +38,7 @@ select{width:100%;padding:12px;border:1px solid #E9CED7;border-radius:12px;backg
 .fill{height:100%;background:#B98E9D;width:0%;transition:width .3s}
 label.toggle{display:flex;justify-content:center;gap:9px;align-items:center;margin:14px}
 small{color:#856774;line-height:1.5;display:block}
-.hidden{display:none}
+.hidden{display:none!important}
 .link{background:none;color:#856774;text-decoration:underline;font-size:13px;padding:8px}
 </style>
 </head>
@@ -85,8 +85,8 @@ small{color:#856774;line-height:1.5;display:block}
 <div class="card">
 <h2>Your exercise</h2>
 <div class="row">
-<button id="slowBtn">Slow squeezes</button>
-<button id="quickBtn" class="secondary">Quick squeezes</button>
+<button id="slowBtn">Long holds</button>
+<button id="quickBtn" class="secondary">Pulses</button>
 </div>
 <p id="exerciseHelp">Gently lift and hold, then relax fully.</p>
 
@@ -99,10 +99,11 @@ small{color:#856774;line-height:1.5;display:block}
 </div>
 </div>
 
-<div class="circle" id="circle">
-<div class="phase" id="phase">Ready?</div>
+<div class="circle hidden" id="circle">
+<div class="phase" id="phase">Squeeze</div>
 <div class="seconds" id="seconds">3</div>
 </div>
+
 <p id="progress">10 gentle repetitions</p>
 <button id="start">Start session</button>
 <button id="pause" class="secondary hidden">Pause</button>
@@ -112,12 +113,6 @@ small{color:#856774;line-height:1.5;display:block}
 <input type="checkbox" id="voice" checked>
 Voice guidance on
 </label>
-<div class="field">Choose your voice
-<select id="voiceChoice">
-<option value="auto">Soft British voice (automatic)</option>
-</select>
-</div>
-<button id="previewVoice" class="secondary">Preview voice</button>
 </div>
 
 <small>Keep breathing naturally and relax fully between squeezes. Stop if you feel pain. If you're recovering from birth or have pelvic symptoms, seek individual guidance from a pelvic health professional.</small>
@@ -204,22 +199,15 @@ function populateTimes(){
 function saveSettings(){
  store(SETTINGS,{
   mode,squeeze,relax,
-  voice:$("voice").checked,
-  voiceChoice:$("voiceChoice").value
+  voice:$("voice").checked
  });
 }
 function setMode(next){
- if(running||paused)resetSession();
+ if(running)resetSession();
  mode=next;
  squeeze=next==="slow"?3:1;
  relax=next==="slow"?3:1;
- $("slowBtn").classList.toggle("secondary",mode!=="slow");
- $("quickBtn").classList.toggle("secondary",mode!=="quick");
- $("exerciseHelp").textContent=mode==="slow"
-  ?"Gently lift and hold, then relax fully."
-  :"Lift and release promptly, without holding.";
- $("squeezeTime").value=squeeze;
- $("relaxTime").value=relax;
+ applyMode();
  remaining=squeeze;
  draw();
  saveSettings();
@@ -238,7 +226,7 @@ $("quickBtn").onclick=()=>setMode("quick");
 
 for(const id of ["squeezeTime","relaxTime"]){
  $(id).onchange=()=>{
-  if(running||paused)resetSession();
+  if(running)resetSession();
   squeeze=Number($("squeezeTime").value);
   relax=Number($("relaxTime").value);
   remaining=squeeze;
@@ -250,49 +238,29 @@ for(const id of ["squeezeTime","relaxTime"]){
 function loadVoices(){
  if(!("speechSynthesis" in window))return;
  availableVoices=speechSynthesis.getVoices();
- const select=$("voiceChoice");
- const previous=select.value;
- select.innerHTML="";
- const auto=document.createElement("option");
- auto.value="auto";
- auto.textContent="Soft British voice (automatic)";
- select.appendChild(auto);
- availableVoices.filter(v=>v.lang.toLowerCase().startsWith("en"))
- .forEach(v=>{
-  const o=document.createElement("option");
-  o.value=v.voiceURI;
-  o.textContent=v.name+" ("+v.lang+")";
-  select.appendChild(o);
- });
- const desired=previous!=="auto"?previous:(savedSettings.voiceChoice||"auto");
- if([...select.options].some(o=>o.value===desired))select.value=desired;
 }
 function pickVoice(){
- const chosen=availableVoices.find(v=>v.voiceURI===$("voiceChoice").value);
- if(chosen)return chosen;
- const english=availableVoices.filter(v=>v.lang.toLowerCase().startsWith("en"));
- return english.find(v=>v.lang.toLowerCase()==="en-gb"&&/female|siri|serena|kate|martha|stephanie/i.test(v.name))
- ||english.find(v=>v.lang.toLowerCase()==="en-gb")
- ||english[0]||null;
+ return availableVoices.find(v=>
+  v.name.toLowerCase().includes("tessa") &&
+  v.lang.toLowerCase().replace("_","-")==="en-za"
+ )||null;
 }
-function speak(word,preview=false){
- if(!("speechSynthesis" in window))return;
- if(!preview&&!$("voice").checked)return;
+function speak(word){
+ if(!$("voice").checked||!("speechSynthesis" in window))return;
  speechSynthesis.cancel();
  const msg=new SpeechSynthesisUtterance(word);
- msg.lang="en-GB";
+ msg.lang="en-ZA";
  msg.rate=.85;
- msg.pitch=1.08;
+ msg.pitch=1.05;
  const v=pickVoice();
  if(v)msg.voice=v;
  speechSynthesis.speak(msg);
 }
-$("previewVoice").onclick=()=>speak("Squeeze. Relax.",true);
 $("voice").onchange=saveSettings;
-$("voiceChoice").onchange=saveSettings;
 
 function draw(){
- $("phase").textContent=running?(phase==="squeeze"?"Squeeze":"Relax"):"Ready?";
+ $("circle").classList.toggle("hidden",!running);
+ $("phase").textContent=phase==="squeeze"?"Squeeze":"Relax";
  $("seconds").textContent=remaining;
  $("progress").textContent=running?"Repetition "+rep+" of 10":"10 gentle repetitions";
  $("circle").classList.toggle("squeeze",running&&phase==="squeeze");
@@ -310,9 +278,7 @@ function finish(){
  store(KEY,data);
  updateDaily();
  draw();
- $("phase").textContent="Well done!";
- $("seconds").textContent="♡";
- $("progress").textContent="Session complete";
+ $("progress").textContent="Well done! Session complete ♡";
  $("start").textContent="Start again";
 }
 function advance(){
