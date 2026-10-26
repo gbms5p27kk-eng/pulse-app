@@ -9,10 +9,16 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#F8ECEE;color:#654B57;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}
-main{max-width:440px;margin:auto;padding:32px 22px;text-align:center}
-h1{font-size:40px;letter-spacing:-2px;margin:22px 0 4px}
+main{max-width:440px;margin:auto;padding:28px 20px;text-align:center}
+h1{font-size:40px;letter-spacing:-2px;margin:15px 0 4px}
 p{color:#856774}
-.card{background:white;border-radius:24px;padding:24px;margin:22px 0}
+.card{background:white;border-radius:24px;padding:22px;margin:20px 0}
+.progress-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:20px 0}
+.session{background:#F8ECEE;border-radius:16px;padding:15px 5px;font-size:13px}
+.session .symbol{font-size:24px;margin-bottom:9px}
+.session .tick{font-size:24px;color:#B98E9D;margin-top:9px}
+.bar{height:9px;background:#F0DFE5;border-radius:20px;overflow:hidden}
+.fill{height:100%;background:#B98E9D;width:0%;transition:width .3s}
 .circle{width:205px;height:205px;margin:25px auto;border-radius:50%;background:#E9CED7;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:background .4s,transform .4s}
 .circle.squeeze{background:#B98E9D;color:white;transform:scale(1.08)}
 .phase{font-size:28px;font-weight:600}
@@ -27,6 +33,19 @@ small{color:#856774}
 <main>
 <h1>pulse.</h1>
 <p>A little strength, every day.</p>
+
+<div class="card">
+<strong>Your daily progress</strong>
+<p>Three little moments, just for you.</p>
+<div class="progress-grid">
+<div class="session">☀️<div>Morning</div><div class="tick" id="tick0">○</div></div>
+<div class="session">🌤️<div>Afternoon</div><div class="tick" id="tick1">○</div></div>
+<div class="session">🌙<div>Evening</div><div class="tick" id="tick2">○</div></div>
+</div>
+<div class="bar"><div class="fill" id="fill"></div></div>
+<p id="dailyCount">0 of 3 sessions completed today</p>
+</div>
+
 <div class="card">
 <p>Your guided pelvic floor session</p>
 <div class="circle" id="circle">
@@ -41,8 +60,30 @@ small{color:#856774}
 <small>Keep breathing naturally. Relax fully between squeezes. Stop if you feel pain.</small>
 </main>
 <script>
-let timer=null,phase="squeeze",remaining=3,rep=1,running=false;
 const $=id=>document.getElementById(id);
+let timer=null,phase="squeeze",remaining=3,rep=1,running=false;
+const today=()=>new Date().toLocaleDateString("en-CA");
+let data={date:today(),count:0};
+try{
+ const saved=JSON.parse(localStorage.getItem("pulseProgress"));
+ if(saved&&saved.date===today())
+  data={date:today(),count:Math.min(3,Math.max(0,saved.count||0))};
+}catch(e){}
+function updateDaily(){
+ if(data.date!==today()){data={date:today(),count:0};save();}
+ for(let i=0;i<3;i++)
+  $("tick"+i).textContent=i<data.count?"✓":"○";
+ $("fill").style.width=(data.count/3*100)+"%";
+ $("dailyCount").textContent=data.count+" of 3 sessions completed today";
+}
+function save(){
+ try{localStorage.setItem("pulseProgress",JSON.stringify(data));}catch(e){}
+}
+function completeSession(){
+ if(data.date!==today())data={date:today(),count:0};
+ if(data.count<3)data.count++;
+ save();updateDaily();
+}
 function speak(word){
  if(!$("voice").checked||!("speechSynthesis" in window))return;
  speechSynthesis.cancel();
@@ -55,6 +96,15 @@ function draw(){
  $("seconds").textContent=remaining;
  $("progress").textContent=running?"Repetition "+rep+" of 10":"10 gentle repetitions";
  $("circle").classList.toggle("squeeze",running&&phase==="squeeze");
+}
+function finish(){
+ clearInterval(timer);running=false;
+ completeSession();
+ $("phase").textContent="Well done!";
+ $("seconds").textContent="♡";
+ $("progress").textContent="Session complete";
+ $("circle").classList.remove("squeeze");
+ $("start").textContent="Start again";
 }
 function startSession(){
  if(running)return;
@@ -69,15 +119,7 @@ function startSession(){
   if(phase==="squeeze"){
    phase="relax";remaining=3;speak("Relax");
   }else{
-   if(rep===10){
-    clearInterval(timer);running=false;
-    $("phase").textContent="Well done!";
-    $("seconds").textContent="♡";
-    $("progress").textContent="Session complete";
-    $("circle").classList.remove("squeeze");
-    $("start").textContent="Start again";
-    return;
-   }
+   if(rep===10){finish();return;}
    rep++;phase="squeeze";remaining=3;speak("Squeeze");
   }
   deadline=Date.now()+3000;draw();
@@ -89,7 +131,10 @@ function resetSession(){
  running=false;remaining=3;rep=1;phase="squeeze";
  $("start").textContent="Start session";draw();
 }
-draw();
+updateDaily();draw();
+document.addEventListener("visibilitychange",()=>{
+ if(!document.hidden)updateDaily();
+});
 </script>
 </body>
 </html>
