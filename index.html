@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#F8ECEE">
+<title>Pulse</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F8ECEE;color:#654B57;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}
+main{max-width:440px;margin:auto;padding:32px 22px;text-align:center}
+h1{font-size:40px;letter-spacing:-2px;margin:22px 0 4px}
+p{color:#856774}
+.card{background:white;border-radius:24px;padding:24px;margin:22px 0}
+.circle{width:205px;height:205px;margin:25px auto;border-radius:50%;background:#E9CED7;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:background .4s,transform .4s}
+.circle.squeeze{background:#B98E9D;color:white;transform:scale(1.08)}
+.phase{font-size:28px;font-weight:600}
+.seconds{font-size:45px;font-weight:300}
+button{background:#B98E9D;color:white;border:0;border-radius:15px;padding:16px 24px;font-size:17px;font-weight:600;width:100%;margin:6px 0}
+button.secondary{background:#F8ECEE;color:#856774}
+label{display:flex;align-items:center;justify-content:center;gap:10px;margin:15px}
+small{color:#856774}
+</style>
+</head>
+<body>
+<main>
+<h1>pulse.</h1>
+<p>A little strength, every day.</p>
+<div class="card">
+<p>Your guided pelvic floor session</p>
+<div class="circle" id="circle">
+<div class="phase" id="phase">Ready?</div>
+<div class="seconds" id="seconds">3</div>
+</div>
+<p id="progress">10 gentle repetitions</p>
+<button id="start" onclick="startSession()">Start session</button>
+<button class="secondary" onclick="resetSession()">Reset</button>
+<label><input type="checkbox" id="voice" checked> Voice guidance on</label>
+</div>
+<small>Keep breathing naturally. Relax fully between squeezes. Stop if you feel pain.</small>
+</main>
+<script>
+let timer=null,phase="squeeze",remaining=3,rep=1,running=false;
+const $=id=>document.getElementById(id);
+function speak(word){
+ if(!$("voice").checked||!("speechSynthesis" in window))return;
+ speechSynthesis.cancel();
+ const msg=new SpeechSynthesisUtterance(word);
+ msg.lang="en-GB";msg.rate=.85;
+ speechSynthesis.speak(msg);
+}
+function draw(){
+ $("phase").textContent=running?(phase==="squeeze"?"Squeeze":"Relax"):"Ready?";
+ $("seconds").textContent=remaining;
+ $("progress").textContent=running?"Repetition "+rep+" of 10":"10 gentle repetitions";
+ $("circle").classList.toggle("squeeze",running&&phase==="squeeze");
+}
+function startSession(){
+ if(running)return;
+ clearInterval(timer);
+ running=true;phase="squeeze";remaining=3;rep=1;
+ $("start").textContent="Session running";
+ draw();speak("Squeeze");
+ let deadline=Date.now()+3000;
+ timer=setInterval(()=>{
+  const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));
+  if(left>0){remaining=left;draw();return;}
+  if(phase==="squeeze"){
+   phase="relax";remaining=3;speak("Relax");
+  }else{
+   if(rep===10){
+    clearInterval(timer);running=false;
+    $("phase").textContent="Well done!";
+    $("seconds").textContent="♡";
+    $("progress").textContent="Session complete";
+    $("circle").classList.remove("squeeze");
+    $("start").textContent="Start again";
+    return;
+   }
+   rep++;phase="squeeze";remaining=3;speak("Squeeze");
+  }
+  deadline=Date.now()+3000;draw();
+ },100);
+}
+function resetSession(){
+ clearInterval(timer);
+ if("speechSynthesis" in window)speechSynthesis.cancel();
+ running=false;remaining=3;rep=1;phase="squeeze";
+ $("start").textContent="Start session";draw();
+}
+draw();
+</script>
+</body>
+</html>
