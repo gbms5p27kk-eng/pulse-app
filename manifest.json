@@ -1,0 +1,19 @@
+
+{
+  "name": "Pulse - Pelvic Floor Exercises",
+  "short_name": "Pulse",
+  "description": "A little strength, every day.",
+  "start_url": "/pulse-app/",
+  "scope": "/pulse-app/",
+  "display": "standalone",
+  "background_color": "#F8ECEE",
+  "theme_color": "#F8ECEE",
+  "icons": [
+    {
+      "src": "/pulse-app/Pulse%20logo.PNG",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
