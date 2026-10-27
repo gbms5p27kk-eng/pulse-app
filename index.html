@@ -46,6 +46,71 @@ label.toggle{display:flex;justify-content:center;gap:9px;align-items:center;marg
 small{color:#856774;line-height:1.5;display:block}
 .hidden{display:none!important}
 .link{background:none;color:#856774;text-decoration:underline;font-size:13px;padding:8px}
+
+/* Gentle reminder settings */
+.reminder-row{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ padding:15px 0;
+ border-bottom:1px solid #F1E5E9;
+ text-align:left;
+}
+.reminder-row:last-of-type{border-bottom:none}
+.reminder-info{flex:1;min-width:0}
+.reminder-name{font-size:15px;font-weight:600}
+.reminder-time{
+ width:105px;
+ border:1px solid #E9CED7;
+ border-radius:12px;
+ padding:9px 5px;
+ color:#654B57;
+ background:#FFF9FB;
+ font-size:14px;
+ font-family:inherit;
+}
+.reminder-time:disabled{opacity:.45}
+.reminder-switch{
+ position:relative;
+ width:43px;
+ height:26px;
+ flex-shrink:0;
+ display:inline-block;
+}
+.reminder-switch input{
+ position:absolute;
+ opacity:0;
+ width:100%;
+ height:100%;
+ margin:0;
+}
+.reminder-switch span{
+ display:block;
+ width:43px;
+ height:26px;
+ border-radius:20px;
+ background:#E5D9DE;
+ transition:background .2s;
+}
+.reminder-switch span:after{
+ content:"";
+ position:absolute;
+ width:20px;
+ height:20px;
+ left:3px;
+ top:3px;
+ border-radius:50%;
+ background:white;
+ box-shadow:0 1px 3px #0002;
+ transition:transform .2s;
+}
+.reminder-switch input:checked+span{background:#B98E9D}
+.reminder-switch input:checked+span:after{transform:translateX(17px)}
+.reminder-switch input:focus-visible+span{
+ outline:2px solid #654B57;
+ outline-offset:3px;
+}
+.reminder-note{font-size:12px;margin:15px 0 0}
 </style>
 </head>
 <body>
@@ -93,6 +158,48 @@ small{color:#856774;line-height:1.5;display:block}
 </div>
 
 <div class="card">
+<h2>Gentle reminders ♡</h2>
+<p>A little nudge to take a moment for yourself.</p>
+
+<div class="reminder-row">
+<div class="reminder-info">
+<div class="reminder-name">☀️ Morning</div>
+</div>
+<input class="reminder-time" id="morningTime" type="time" value="08:00" aria-label="Morning reminder time">
+<label class="reminder-switch">
+<input type="checkbox" id="morningOn" checked aria-label="Morning reminder enabled">
+<span></span>
+</label>
+</div>
+
+<div class="reminder-row">
+<div class="reminder-info">
+<div class="reminder-name">🌤️ Afternoon</div>
+</div>
+<input class="reminder-time" id="afternoonTime" type="time" value="13:00" aria-label="Afternoon reminder time">
+<label class="reminder-switch">
+<input type="checkbox" id="afternoonOn" checked aria-label="Afternoon reminder enabled">
+<span></span>
+</label>
+</div>
+
+<div class="reminder-row">
+<div class="reminder-info">
+<div class="reminder-name">🌙 Evening</div>
+</div>
+<input class="reminder-time" id="eveningTime" type="time" value="20:00" aria-label="Evening reminder time">
+<label class="reminder-switch">
+<input type="checkbox" id="eveningOn" checked aria-label="Evening reminder enabled">
+<span></span>
+</label>
+</div>
+
+<p id="reminderStatus" class="reminder-note" role="status">
+Your reminder preferences are saved on this device. Notifications are not active yet.
+</p>
+</div>
+
+<div class="card">
 <h2>Your exercise</h2>
 <div class="row">
 <button id="slowBtn">Long holds</button>
@@ -134,6 +241,7 @@ const $=id=>document.getElementById(id);
 const KEY="pulseProgress";
 const STAGE="pulseStage";
 const SETTINGS="pulseSettings";
+const REMINDERS="pulseReminders";
 
 function localDay(){
  const d=new Date();
@@ -189,6 +297,56 @@ $("changeStage").onclick=()=>{
  selectedStage="";
  showScreen();
 };
+
+// Save the user's preferred reminder times and switches.
+const reminderDefaults={
+ morning:{time:"08:00",enabled:true},
+ afternoon:{time:"13:00",enabled:true},
+ evening:{time:"20:00",enabled:true}
+};
+
+const savedReminders=getSaved(REMINDERS)||{};
+
+for(const period of ["morning","afternoon","evening"]){
+ const timeInput=$(period+"Time");
+ const onInput=$(period+"On");
+ const saved=savedReminders[period];
+
+ if(saved && typeof saved.time==="string" &&
+    /^\d{2}:\d{2}$/.test(saved.time)){
+  timeInput.value=saved.time;
+ }
+
+ if(saved && typeof saved.enabled==="boolean"){
+  onInput.checked=saved.enabled;
+ }else{
+  onInput.checked=reminderDefaults[period].enabled;
+ }
+
+ timeInput.disabled=!onInput.checked;
+
+ timeInput.addEventListener("change",saveReminders);
+ onInput.addEventListener("change",()=>{
+  timeInput.disabled=!onInput.checked;
+  saveReminders();
+ });
+}
+
+function saveReminders(){
+ const preferences={};
+
+ for(const period of ["morning","afternoon","evening"]){
+  preferences[period]={
+   time:$(period+"Time").value,
+   enabled:$(period+"On").checked
+  };
+ }
+
+ store(REMINDERS,preferences);
+
+ $("reminderStatus").textContent=
+  "Preferences saved ♡ Notifications are not active yet.";
+}
 
 let mode="slow",squeeze=3,relax=3;
 let phase="squeeze",remaining=3,rep=1;
@@ -354,6 +512,7 @@ relax=Math.min(10,Math.max(1,Number(savedSettings.relax)||(mode==="quick"?1:3)))
 $("voice").checked=savedSettings.voice!==false;
 applyMode();
 remaining=squeeze;
+
 if("speechSynthesis" in window){
  loadVoices();
  speechSynthesis.onvoiceschanged=loadVoices;
@@ -361,11 +520,12 @@ if("speechSynthesis" in window){
 updateDaily();
 showScreen();
 draw();
+
 document.addEventListener("visibilitychange",()=>{
  if(!document.hidden)updateDaily();
 });
 
-// Register Pulse's service worker for future push notifications.
+// Prepare Pulse for future web push notifications.
 if("serviceWorker" in navigator){
  window.addEventListener("load",()=>{
   navigator.serviceWorker.register("./sw.js")
