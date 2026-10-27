@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,6 +11,17 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="https://gbms5p27kk-eng.github.io/pulse-app/Pulse%20logo.PNG">
 <link rel="icon" type="image/png" href="https://gbms5p27kk-eng.github.io/pulse-app/Pulse%20logo.PNG">
+
+<!-- OneSignal Web Push -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({
+    appId: "b5b28f65-852f-4a95-a39a-90a187650a50"
+  });
+});
+</script>
 
 <style>
 *{box-sizing:border-box}
@@ -47,7 +57,6 @@ small{color:#856774;line-height:1.5;display:block}
 .hidden{display:none!important}
 .link{background:none;color:#856774;text-decoration:underline;font-size:13px;padding:8px}
 
-/* Gentle reminder settings */
 .reminder-row{
  display:flex;
  align-items:center;
@@ -113,13 +122,16 @@ small{color:#856774;line-height:1.5;display:block}
 .reminder-note{font-size:12px;margin:15px 0 0}
 </style>
 </head>
+
 <body>
 <main>
+
 <h1>pulse.</h1>
 <p>A little strength, every day.</p>
 
 <section id="welcome" class="hidden">
 <div class="card">
+
 <h2>What brings you here?</h2>
 <p>Let's make Pulse feel right for you.</p>
 
@@ -139,401 +151,1041 @@ small{color:#856774;line-height:1.5;display:block}
 </button>
 
 <button id="continue" disabled>Continue</button>
+
 </div>
 </section>
 
 <section id="home" class="hidden">
+
 <button class="link" id="changeStage">Change my stage</button>
 
 <div class="card">
+
 <strong>Your daily progress</strong>
 <p>Three little moments, just for you.</p>
+
 <div class="progress-grid">
-<div class="session">☀️<div>Morning</div><div class="tick" id="tick0">○</div></div>
-<div class="session">🌤️<div>Afternoon</div><div class="tick" id="tick1">○</div></div>
-<div class="session">🌙<div>Evening</div><div class="tick" id="tick2">○</div></div>
+
+<div class="session">
+☀️
+<div>Morning</div>
+<div class="tick" id="tick0">○</div>
 </div>
-<div class="bar"><div class="fill" id="fill"></div></div>
+
+<div class="session">
+🌤️
+<div>Afternoon</div>
+<div class="tick" id="tick1">○</div>
+</div>
+
+<div class="session">
+🌙
+<div>Evening</div>
+<div class="tick" id="tick2">○</div>
+</div>
+
+</div>
+
+<div class="bar">
+<div class="fill" id="fill"></div>
+</div>
+
 <p id="dailyCount">0 of 3 sessions completed today</p>
+
 </div>
 
 <div class="card">
+
 <h2>Gentle reminders ♡</h2>
+
 <p>A little nudge to take a moment for yourself.</p>
 
 <div class="reminder-row">
+
 <div class="reminder-info">
 <div class="reminder-name">☀️ Morning</div>
 </div>
-<input class="reminder-time" id="morningTime" type="time" value="08:00" aria-label="Morning reminder time">
+
+<input
+class="reminder-time"
+id="morningTime"
+type="time"
+value="08:00"
+aria-label="Morning reminder time">
+
 <label class="reminder-switch">
-<input type="checkbox" id="morningOn" checked aria-label="Morning reminder enabled">
+<input
+type="checkbox"
+id="morningOn"
+checked
+aria-label="Morning reminder enabled">
 <span></span>
 </label>
+
 </div>
 
 <div class="reminder-row">
+
 <div class="reminder-info">
 <div class="reminder-name">🌤️ Afternoon</div>
 </div>
-<input class="reminder-time" id="afternoonTime" type="time" value="13:00" aria-label="Afternoon reminder time">
+
+<input
+class="reminder-time"
+id="afternoonTime"
+type="time"
+value="13:00"
+aria-label="Afternoon reminder time">
+
 <label class="reminder-switch">
-<input type="checkbox" id="afternoonOn" checked aria-label="Afternoon reminder enabled">
+<input
+type="checkbox"
+id="afternoonOn"
+checked
+aria-label="Afternoon reminder enabled">
 <span></span>
 </label>
+
 </div>
 
 <div class="reminder-row">
+
 <div class="reminder-info">
 <div class="reminder-name">🌙 Evening</div>
 </div>
-<input class="reminder-time" id="eveningTime" type="time" value="20:00" aria-label="Evening reminder time">
+
+<input
+class="reminder-time"
+id="eveningTime"
+type="time"
+value="20:00"
+aria-label="Evening reminder time">
+
 <label class="reminder-switch">
-<input type="checkbox" id="eveningOn" checked aria-label="Evening reminder enabled">
+<input
+type="checkbox"
+id="eveningOn"
+checked
+aria-label="Evening reminder enabled">
 <span></span>
 </label>
+
 </div>
 
 <p id="reminderStatus" class="reminder-note" role="status">
 Your reminder preferences are saved on this device. Notifications are not active yet.
 </p>
+
 </div>
 
 <div class="card">
+
 <h2>Your exercise</h2>
+
 <div class="row">
 <button id="slowBtn">Long holds</button>
 <button id="quickBtn" class="secondary">Pulses</button>
 </div>
-<p id="exerciseHelp">Gently lift and hold, then relax fully.</p>
+
+<p id="exerciseHelp">
+Gently lift and hold, then relax fully.
+</p>
 
 <div class="row">
-<div class="field">Squeeze time
+
+<div class="field">
+Squeeze time
 <select id="squeezeTime"></select>
 </div>
-<div class="field">Relax time
+
+<div class="field">
+Relax time
 <select id="relaxTime"></select>
 </div>
+
 </div>
 
 <div class="circle hidden" id="circle">
-<div class="phase" id="phase">Squeeze</div>
-<div class="seconds" id="seconds">3</div>
+
+<div class="phase" id="phase">
+Squeeze
 </div>
 
-<p id="progress">10 gentle repetitions</p>
-<button id="start">Start session</button>
-<button id="pause" class="secondary hidden">Pause</button>
-<button id="reset" class="secondary">Reset</button>
+<div class="seconds" id="seconds">
+3
+</div>
+
+</div>
+
+<p id="progress">
+10 gentle repetitions
+</p>
+
+<button id="start">
+Start session
+</button>
+
+<button id="pause" class="secondary hidden">
+Pause
+</button>
+
+<button id="reset" class="secondary">
+Reset
+</button>
 
 <label class="toggle">
 <input type="checkbox" id="voice" checked>
 Voice guidance on
 </label>
+
 </div>
 
-<small>Keep breathing naturally and relax fully between squeezes. Stop if you feel pain. If you're recovering from birth or have pelvic symptoms, seek individual guidance from a pelvic health professional.</small>
+<small>
+Keep breathing naturally and relax fully between squeezes.
+Stop if you feel pain.
+If you're recovering from birth or have pelvic symptoms,
+seek individual guidance from a pelvic health professional.
+</small>
+
 </section>
+
 </main>
 
 <script>
+
 const $=id=>document.getElementById(id);
+
 const KEY="pulseProgress";
 const STAGE="pulseStage";
 const SETTINGS="pulseSettings";
 const REMINDERS="pulseReminders";
 
 function localDay(){
+
  const d=new Date();
- return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-}
-function getSaved(key){
- try{return JSON.parse(localStorage.getItem(key));}
- catch(e){return null;}
-}
-function store(key,value){
- try{localStorage.setItem(key,JSON.stringify(value));}catch(e){}
+
+ return d.getFullYear()
+ +"-"
+ +String(d.getMonth()+1).padStart(2,"0")
+ +"-"
+ +String(d.getDate()).padStart(2,"0");
+
 }
 
-let stage=localStorage.getItem(STAGE)||"";
+function getSaved(key){
+
+ try{
+  return JSON.parse(localStorage.getItem(key));
+ }
+ catch(e){
+  return null;
+ }
+
+}
+
+function store(key,value){
+
+ try{
+  localStorage.setItem(key,JSON.stringify(value));
+ }
+ catch(e){}
+
+}
+
+let stage=
+localStorage.getItem(STAGE)||"";
+
 let selectedStage=stage;
+
 let data=getSaved(KEY);
+
 if(!data||data.date!==localDay())
- data={date:localDay(),count:0};
-data.count=Math.min(3,Math.max(0,Number(data.count)||0));
+
+ data={
+  date:localDay(),
+  count:0
+ };
+
+data.count=
+Math.min(
+3,
+Math.max(
+0,
+Number(data.count)||0
+)
+);
 
 function updateDaily(){
+
  if(data.date!==localDay()){
-  data={date:localDay(),count:0};
+
+  data={
+   date:localDay(),
+   count:0
+  };
+
   store(KEY,data);
+
  }
+
  for(let i=0;i<3;i++)
-  $("tick"+i).textContent=i<data.count?"✓":"○";
- $("fill").style.width=(data.count/3*100)+"%";
- $("dailyCount").textContent=data.count+" of 3 sessions completed today";
+
+  $("tick"+i).textContent=
+  i<data.count?"✓":"○";
+
+ $("fill").style.width=
+ (data.count/3*100)+"%";
+
+ $("dailyCount").textContent=
+ data.count+
+ " of 3 sessions completed today";
+
 }
+
 function showScreen(){
- $("welcome").classList.toggle("hidden",!!stage);
- $("home").classList.toggle("hidden",!stage);
- document.querySelectorAll(".choice").forEach(b=>
-  b.classList.toggle("selected",b.dataset.stage===selectedStage)
+
+ $("welcome")
+ .classList
+ .toggle(
+ "hidden",
+ !!stage
  );
- $("continue").disabled=!selectedStage;
+
+ $("home")
+ .classList
+ .toggle(
+ "hidden",
+ !stage
+ );
+
+ document
+ .querySelectorAll(".choice")
+ .forEach(b=>
+
+  b.classList.toggle(
+   "selected",
+   b.dataset.stage===selectedStage
+  )
+
+ );
+
+ $("continue").disabled=
+ !selectedStage;
+
 }
-document.querySelectorAll(".choice").forEach(b=>{
+
+document
+.querySelectorAll(".choice")
+.forEach(b=>{
+
  b.onclick=()=>{
-  selectedStage=b.dataset.stage;
+
+  selectedStage=
+  b.dataset.stage;
+
   showScreen();
+
  };
+
 });
+
 $("continue").onclick=()=>{
+
  stage=selectedStage;
- localStorage.setItem(STAGE,stage);
+
+ localStorage
+ .setItem(
+ STAGE,
+ stage
+ );
+
  showScreen();
+
 };
+
 $("changeStage").onclick=()=>{
- if(running)resetSession();
+
+ if(running)
+ resetSession();
+
  stage="";
  selectedStage="";
+
  showScreen();
+
 };
 
-// Save the user's preferred reminder times and switches.
 const reminderDefaults={
- morning:{time:"08:00",enabled:true},
- afternoon:{time:"13:00",enabled:true},
- evening:{time:"20:00",enabled:true}
+
+ morning:{
+  time:"08:00",
+  enabled:true
+ },
+
+ afternoon:{
+  time:"13:00",
+  enabled:true
+ },
+
+ evening:{
+  time:"20:00",
+  enabled:true
+ }
+
 };
 
-const savedReminders=getSaved(REMINDERS)||{};
+const savedReminders=
+getSaved(REMINDERS)||{};
 
-for(const period of ["morning","afternoon","evening"]){
- const timeInput=$(period+"Time");
- const onInput=$(period+"On");
- const saved=savedReminders[period];
+for(
+ const period of
+ ["morning","afternoon","evening"]
+){
 
- if(saved && typeof saved.time==="string" &&
-    /^\d{2}:\d{2}$/.test(saved.time)){
-  timeInput.value=saved.time;
+ const timeInput=
+ $(period+"Time");
+
+ const onInput=
+ $(period+"On");
+
+ const saved=
+ savedReminders[period];
+
+ if(
+  saved &&
+  typeof saved.time==="string" &&
+  /^\d{2}:\d{2}$/.test(saved.time)
+ ){
+
+  timeInput.value=
+  saved.time;
+
  }
 
- if(saved && typeof saved.enabled==="boolean"){
-  onInput.checked=saved.enabled;
- }else{
-  onInput.checked=reminderDefaults[period].enabled;
+ if(
+  saved &&
+  typeof saved.enabled==="boolean"
+ ){
+
+  onInput.checked=
+  saved.enabled;
+
+ }
+ else{
+
+  onInput.checked=
+  reminderDefaults[period].enabled;
+
  }
 
- timeInput.disabled=!onInput.checked;
+ timeInput.disabled=
+ !onInput.checked;
 
- timeInput.addEventListener("change",saveReminders);
- onInput.addEventListener("change",()=>{
-  timeInput.disabled=!onInput.checked;
+ timeInput.addEventListener(
+ "change",
+ saveReminders
+ );
+
+ onInput.addEventListener(
+ "change",
+ ()=>{
+
+  timeInput.disabled=
+  !onInput.checked;
+
   saveReminders();
- });
+
+ }
+ );
+
 }
 
 function saveReminders(){
+
  const preferences={};
 
- for(const period of ["morning","afternoon","evening"]){
+ for(
+  const period of
+  ["morning","afternoon","evening"]
+ ){
+
   preferences[period]={
-   time:$(period+"Time").value,
-   enabled:$(period+"On").checked
+
+   time:
+   $(period+"Time").value,
+
+   enabled:
+   $(period+"On").checked
+
   };
+
  }
 
- store(REMINDERS,preferences);
+ store(
+ REMINDERS,
+ preferences
+ );
 
- $("reminderStatus").textContent=
-  "Preferences saved ♡ Notifications are not active yet.";
+ $("reminderStatus")
+ .textContent=
+ "Preferences saved ♡ Notifications are not active yet.";
+
 }
 
-let mode="slow",squeeze=3,relax=3;
-let phase="squeeze",remaining=3,rep=1;
-let running=false,paused=false,timer=null,deadline=0;
+let mode="slow";
+let squeeze=3;
+let relax=3;
+
+let phase="squeeze";
+let remaining=3;
+let rep=1;
+
+let running=false;
+let paused=false;
+
+let timer=null;
+let deadline=0;
+
 let availableVoices=[];
-const savedSettings=getSaved(SETTINGS)||{};
+
+const savedSettings=
+getSaved(SETTINGS)||{};
 
 function populateTimes(){
- for(let i=1;i<=10;i++){
-  for(const id of ["squeezeTime","relaxTime"]){
-   const option=document.createElement("option");
-   option.value=i;
-   option.textContent=i+" second"+(i===1?"":"s");
-   $(id).appendChild(option);
-  }
- }
-}
-function saveSettings(){
- store(SETTINGS,{
-  mode,squeeze,relax,
-  voice:$("voice").checked
- });
-}
-function setMode(next){
- if(running)resetSession();
- mode=next;
- squeeze=next==="slow"?3:1;
- relax=next==="slow"?3:1;
- applyMode();
- remaining=squeeze;
- draw();
- saveSettings();
-}
-function applyMode(){
- $("slowBtn").classList.toggle("secondary",mode!=="slow");
- $("quickBtn").classList.toggle("secondary",mode!=="quick");
- $("exerciseHelp").textContent=mode==="slow"
-  ?"Gently lift and hold, then relax fully."
-  :"Lift and release promptly, without holding.";
- $("squeezeTime").value=squeeze;
- $("relaxTime").value=relax;
-}
-$("slowBtn").onclick=()=>setMode("slow");
-$("quickBtn").onclick=()=>setMode("quick");
 
-for(const id of ["squeezeTime","relaxTime"]){
+ for(let i=1;i<=10;i++){
+
+  for(
+   const id of
+   ["squeezeTime","relaxTime"]
+  ){
+
+   const option=
+   document.createElement("option");
+
+   option.value=i;
+
+   option.textContent=
+   i+
+   " second"+
+   (i===1?"":"s");
+
+   $(id)
+   .appendChild(option);
+
+  }
+
+ }
+
+}
+
+function saveSettings(){
+
+ store(
+ SETTINGS,
+ {
+
+  mode,
+  squeeze,
+  relax,
+  voice:$("voice").checked
+
+ }
+ );
+
+}
+
+function setMode(next){
+
+ if(running)
+ resetSession();
+
+ mode=next;
+
+ squeeze=
+ next==="slow"?3:1;
+
+ relax=
+ next==="slow"?3:1;
+
+ applyMode();
+
+ remaining=squeeze;
+
+ draw();
+
+ saveSettings();
+
+}
+
+function applyMode(){
+
+ $("slowBtn")
+ .classList
+ .toggle(
+ "secondary",
+ mode!=="slow"
+ );
+
+ $("quickBtn")
+ .classList
+ .toggle(
+ "secondary",
+ mode!=="quick"
+ );
+
+ $("exerciseHelp")
+ .textContent=
+ mode==="slow"
+ ?
+ "Gently lift and hold, then relax fully."
+ :
+ "Lift and release promptly, without holding.";
+
+ $("squeezeTime").value=
+ squeeze;
+
+ $("relaxTime").value=
+ relax;
+
+}
+
+$("slowBtn").onclick=
+()=>setMode("slow");
+
+$("quickBtn").onclick=
+()=>setMode("quick");
+
+for(
+ const id of
+ ["squeezeTime","relaxTime"]
+){
+
  $(id).onchange=()=>{
-  if(running)resetSession();
-  squeeze=Number($("squeezeTime").value);
-  relax=Number($("relaxTime").value);
-  remaining=squeeze;
+
+  if(running)
+  resetSession();
+
+  squeeze=
+  Number(
+  $("squeezeTime").value
+  );
+
+  relax=
+  Number(
+  $("relaxTime").value
+  );
+
+  remaining=
+  squeeze;
+
   draw();
+
   saveSettings();
+
  };
+
 }
 
 function loadVoices(){
- if(!("speechSynthesis" in window))return;
- availableVoices=speechSynthesis.getVoices();
+
+ if(
+  !("speechSynthesis" in window)
+ )
+ return;
+
+ availableVoices=
+ speechSynthesis.getVoices();
+
 }
+
 function pickVoice(){
- return availableVoices.find(v=>
-  v.name.toLowerCase().includes("tessa") &&
-  v.lang.toLowerCase().replace("_","-")==="en-za"
+
+ return availableVoices.find(
+ v=>
+
+  v.name
+  .toLowerCase()
+  .includes("tessa")
+
+  &&
+
+  v.lang
+  .toLowerCase()
+  .replace("_","-")
+  ==="en-za"
+
  )||null;
+
 }
+
 function speak(word){
- if(!$("voice").checked||!("speechSynthesis" in window))return;
+
+ if(
+  !$("voice").checked ||
+  !("speechSynthesis" in window)
+ )
+ return;
+
  speechSynthesis.cancel();
- const msg=new SpeechSynthesisUtterance(word);
+
+ const msg=
+ new SpeechSynthesisUtterance(word);
+
  msg.lang="en-ZA";
  msg.rate=.85;
  msg.pitch=1.05;
- const v=pickVoice();
- if(v)msg.voice=v;
+
+ const v=
+ pickVoice();
+
+ if(v)
+ msg.voice=v;
+
  speechSynthesis.speak(msg);
+
 }
-$("voice").onchange=saveSettings;
+
+$("voice").onchange=
+saveSettings;
 
 function draw(){
- $("circle").classList.toggle("hidden",!running);
- $("phase").textContent=phase==="squeeze"?"Squeeze":"Relax";
- $("seconds").textContent=remaining;
- $("progress").textContent=running?"Repetition "+rep+" of 10":"10 gentle repetitions";
- $("circle").classList.toggle("squeeze",running&&phase==="squeeze");
- $("start").disabled=running;
- $("start").textContent=running?"Session running":"Start session";
- $("pause").classList.toggle("hidden",!running);
- $("pause").textContent=paused?"Resume":"Pause";
+
+ $("circle")
+ .classList
+ .toggle(
+ "hidden",
+ !running
+ );
+
+ $("phase")
+ .textContent=
+ phase==="squeeze"
+ ?
+ "Squeeze"
+ :
+ "Relax";
+
+ $("seconds")
+ .textContent=
+ remaining;
+
+ $("progress")
+ .textContent=
+ running
+ ?
+ "Repetition "+
+ rep+
+ " of 10"
+ :
+ "10 gentle repetitions";
+
+ $("circle")
+ .classList
+ .toggle(
+ "squeeze",
+ running &&
+ phase==="squeeze"
+ );
+
+ $("start").disabled=
+ running;
+
+ $("start")
+ .textContent=
+ running
+ ?
+ "Session running"
+ :
+ "Start session";
+
+ $("pause")
+ .classList
+ .toggle(
+ "hidden",
+ !running
+ );
+
+ $("pause")
+ .textContent=
+ paused
+ ?
+ "Resume"
+ :
+ "Pause";
+
 }
+
 function finish(){
+
  clearInterval(timer);
+
  running=false;
  paused=false;
- if(data.date!==localDay())data={date:localDay(),count:0};
- if(data.count<3)data.count++;
- store(KEY,data);
+
+ if(
+  data.date!==localDay()
+ )
+
+ data={
+  date:localDay(),
+  count:0
+ };
+
+ if(data.count<3)
+ data.count++;
+
+ store(
+ KEY,
+ data
+ );
+
  updateDaily();
+
  draw();
- $("progress").textContent="Well done! Session complete ♡";
- $("start").textContent="Start again";
+
+ $("progress")
+ .textContent=
+ "Well done! Session complete ♡";
+
+ $("start")
+ .textContent=
+ "Start again";
+
 }
+
 function advance(){
- if(phase==="squeeze"){
+
+ if(
+  phase==="squeeze"
+ ){
+
   phase="relax";
   remaining=relax;
+
   speak("Relax");
- }else{
-  if(rep===10){finish();return;}
+
+ }
+ else{
+
+  if(rep===10){
+
+   finish();
+   return;
+
+  }
+
   rep++;
+
   phase="squeeze";
   remaining=squeeze;
+
   speak("Squeeze");
+
  }
- deadline=Date.now()+remaining*1000;
+
+ deadline=
+ Date.now()+
+ remaining*1000;
+
  draw();
+
 }
+
 function tick(){
- if(!running||paused)return;
- if(Date.now()>=deadline){advance();return;}
- const left=Math.ceil((deadline-Date.now())/1000);
- if(left!==remaining){remaining=left;draw();}
+
+ if(
+  !running ||
+  paused
+ )
+ return;
+
+ if(
+  Date.now()>=deadline
+ ){
+
+  advance();
+  return;
+
+ }
+
+ const left=
+ Math.ceil(
+ (deadline-Date.now())/1000
+ );
+
+ if(
+  left!==remaining
+ ){
+
+  remaining=left;
+
+  draw();
+
+ }
+
 }
+
 function startSession(){
- if(running)return;
+
+ if(running)
+ return;
+
  clearInterval(timer);
+
  running=true;
  paused=false;
+
  rep=1;
+
  phase="squeeze";
  remaining=squeeze;
- deadline=Date.now()+remaining*1000;
+
+ deadline=
+ Date.now()+
+ remaining*1000;
+
  draw();
+
  speak("Squeeze");
- timer=setInterval(tick,100);
+
+ timer=
+ setInterval(
+ tick,
+ 100
+ );
+
 }
+
 function resetSession(){
+
  clearInterval(timer);
- if("speechSynthesis" in window)speechSynthesis.cancel();
- running=false;paused=false;rep=1;
- phase="squeeze";remaining=squeeze;
+
+ if(
+  "speechSynthesis" in window
+ )
+ speechSynthesis.cancel();
+
+ running=false;
+ paused=false;
+
+ rep=1;
+
+ phase="squeeze";
+ remaining=squeeze;
+
  draw();
+
 }
-$("start").onclick=startSession;
-$("reset").onclick=resetSession;
+
+$("start").onclick=
+startSession;
+
+$("reset").onclick=
+resetSession;
+
 $("pause").onclick=()=>{
- if(!running)return;
+
+ if(!running)
+ return;
+
  if(paused){
+
   paused=false;
-  deadline=Date.now()+remaining*1000;
- }else{
-  paused=true;
-  remaining=Math.max(1,Math.ceil((deadline-Date.now())/1000));
-  if("speechSynthesis" in window)speechSynthesis.cancel();
+
+  deadline=
+  Date.now()+
+  remaining*1000;
+
  }
+ else{
+
+  paused=true;
+
+  remaining=
+  Math.max(
+  1,
+  Math.ceil(
+  (deadline-Date.now())/1000
+  )
+  );
+
+  if(
+   "speechSynthesis" in window
+  )
+  speechSynthesis.cancel();
+
+ }
+
  draw();
+
 };
 
 populateTimes();
-mode=savedSettings.mode==="quick"?"quick":"slow";
-squeeze=Math.min(10,Math.max(1,Number(savedSettings.squeeze)||(mode==="quick"?1:3)));
-relax=Math.min(10,Math.max(1,Number(savedSettings.relax)||(mode==="quick"?1:3)));
-$("voice").checked=savedSettings.voice!==false;
+
+mode=
+savedSettings.mode==="quick"
+?
+"quick"
+:
+"slow";
+
+squeeze=
+Math.min(
+10,
+Math.max(
+1,
+Number(savedSettings.squeeze)
+||
+(mode==="quick"?1:3)
+)
+);
+
+relax=
+Math.min(
+10,
+Math.max(
+1,
+Number(savedSettings.relax)
+||
+(mode==="quick"?1:3)
+)
+);
+
+$("voice").checked=
+savedSettings.voice!==false;
+
 applyMode();
+
 remaining=squeeze;
 
-if("speechSynthesis" in window){
+if(
+ "speechSynthesis" in window
+){
+
  loadVoices();
- speechSynthesis.onvoiceschanged=loadVoices;
+
+ speechSynthesis.onvoiceschanged=
+ loadVoices;
+
 }
+
 updateDaily();
 showScreen();
 draw();
 
-document.addEventListener("visibilitychange",()=>{
- if(!document.hidden)updateDaily();
-});
+document
+.addEventListener(
+"visibilitychange",
+()=>{
 
-// Prepare Pulse for future web push notifications.
-if("serviceWorker" in navigator){
- window.addEventListener("load",()=>{
-  navigator.serviceWorker.register("./sw.js")
-   .catch(error=>{
-    console.log("Service worker registration failed:",error);
-   });
- });
+ if(!document.hidden)
+ updateDaily();
+
 }
+);
+
 </script>
+
 </body>
 </html>
