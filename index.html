@@ -18,7 +18,9 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 
 OneSignalDeferred.push(async function(OneSignal) {
   await OneSignal.init({
-    appId: "b5b28f65-852f-4a95-a39a-90a187650a50"
+    appId: "b5b28f65-852f-4a95-a39a-90a187650a50",
+    serviceWorkerPath: "/pulse-app/OneSignalSDKWorker.js",
+    serviceWorkerParam: { scope: "/pulse-app/" }
   });
 
   updateNotificationUI(OneSignal);
