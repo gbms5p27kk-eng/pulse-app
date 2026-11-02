@@ -8,7 +8,7 @@
  * It does NOT yet deliver notifications. Delivery requires VAPID encryption,
  * a configured sender key pair, and a scheduled trigger.
  *
- * Privacy: no account, email or identifying information is collected.
+ * Privacy: no account or email is collected. Push endpoint and encryption keys\n * are device-specific identifiers and must be handled as personal data.
  */
 const APP_ORIGIN = "https://gbms5p27kk-eng.github.io";
 const HEADERS = {
@@ -69,7 +69,7 @@ export default {
       }
       const preferences = validatePreferences(data.preferences);
       if (!preferences) return json({ error: "Invalid reminder preferences" }, 400);
-      if (data.timezone !== "Europe/London") return json({ error: "Unsupported timezone" }, 400);
+      if (typeof data.timezone !== "string" || data.timezone.length > 80 || !Intl.supportedValuesOf("timeZone").includes(data.timezone)) return json({ error: "Unsupported timezone" }, 400);
       await env.PULSE_SUBSCRIPTIONS.put(key, JSON.stringify({
         subscription: data.subscription, preferences, timezone: data.timezone,
         updatedAt: new Date().toISOString()
