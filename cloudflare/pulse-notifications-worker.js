@@ -2,7 +2,7 @@
  * Pulse Cloudflare Worker — subscription and reminder preferences API.
  *
  * Deploy to the existing "pulse-notifications" Worker.
- * REQUIRED binding: KV namespace named PULSE_SUBSCRIPTIONS.
+ * REQUIRED binding: KV namespace named PULSE_REMINDERS.
  *
  * This stage stores real browser push subscriptions and chosen reminder times.
  * It does NOT yet deliver notifications. Delivery requires VAPID encryption,
@@ -52,12 +52,12 @@ export default {
     const path = new URL(request.url).pathname;
     if (path === "/health" && request.method === "GET") {
       return json({ service: "pulse-notifications", status: "ready", notificationsActive: false,
-        storageConfigured: !!env.PULSE_SUBSCRIPTIONS });
+        storageConfigured: !!env.PULSE_REMINDERS });
     }
     if (path === "/config" && request.method === "GET") {
       return json({ notificationsActive: false, publicKey: env.VAPID_PUBLIC_KEY || null });
     }
-    if (!env.PULSE_SUBSCRIPTIONS) return json({ error: "Storage not configured" }, 503);
+    if (!env.PULSE_REMINDERS) return json({ error: "Storage not configured" }, 503);
     if ((path === "/subscribe" && request.method === "POST") ||
         (path === "/unsubscribe" && request.method === "DELETE")) {
       let data;
@@ -73,7 +73,7 @@ export default {
       if (typeof data.timezone !== "string" || data.timezone.length > 80) return json({ error: "Unsupported timezone" }, 400);
       try { new Intl.DateTimeFormat("en-GB", { timeZone: data.timezone }); }
       catch { return json({ error: "Unsupported timezone" }, 400); }
-      await env.PULSE_SUBSCRIPTIONS.put(key, JSON.stringify({
+      await env.PULSE_REMINDERS.put(key, JSON.stringify({
         subscription: data.subscription, preferences, timezone: data.timezone,
         updatedAt: new Date().toISOString()
       }));
