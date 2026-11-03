@@ -392,18 +392,18 @@ let data=normaliseProgress(getSaved(KEY));
 // This never prevents a session completing if the network is unavailable.
 async function syncProgress(){
  try{
-  if(!("serviceWorker" in navigator))return false;
+  if(!("serviceWorker" in navigator))return {ok:false,reason:"Service worker unavailable"};
   const registration=await navigator.serviceWorker.ready;
   const subscription=await registration.pushManager.getSubscription();
-  if(!subscription)return false;
+  if(!subscription)return {ok:false,reason:"Push subscription missing"};
   const response=await fetch("https://pulse-notifications.9tphnhk7wb.workers.dev/progress",{
    method:"POST",headers:{"Content-Type":"application/json"},
    body:JSON.stringify({subscription:subscription.toJSON(),date:data.date,completed:data.completed})
   });
-  if(!response.ok)return false;
-  const result=await response.json();
-  return result.saved===true;
- }catch(e){console.warn("Pulse progress sync pending",e);return false;}
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)return {ok:false,reason:"Server "+response.status+(result.error?": "+result.error:"")};
+  return result.saved===true?{ok:true}:{ok:false,reason:"Server did not confirm save"};
+ }catch(e){console.warn("Pulse progress sync pending",e);return {ok:false,reason:e.message||"Network error"};}
 }
 
 function updateDaily(){
@@ -549,7 +549,7 @@ $("saveReminderBackend").onclick=async()=>{
   if(!result.saved)throw new Error("Pulse did not confirm the save.");
   const progressSynced=await syncProgress();
   output.textContent="Reminder settings saved to Pulse ♡ "+
-   (progressSynced?"Completed sessions synced successfully ♡":"Completed sessions not yet synced — please try again.")+
+   (progressSynced.ok?"Completed sessions synced successfully ♡":"Completed sessions not yet synced ("+progressSynced.reason+").")+
    " Automatic notifications are not active yet.";
  }catch(error){
   output.textContent=error.message||"Couldn't save settings. Please try again.";
