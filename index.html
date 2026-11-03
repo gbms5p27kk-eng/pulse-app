@@ -388,6 +388,21 @@ function currentPeriod(){
 }
 let data=normaliseProgress(getSaved(KEY));
 
+// Synchronise completed periods so the backend can skip future reminders.
+// This never prevents a session completing if the network is unavailable.
+async function syncProgress(){
+ try{
+  if(!("serviceWorker" in navigator))return;
+  const registration=await navigator.serviceWorker.ready;
+  const subscription=await registration.pushManager.getSubscription();
+  if(!subscription)return;
+  await fetch("https://pulse-notifications.9tphnhk7wb.workers.dev/progress",{
+   method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({subscription:subscription.toJSON(),date:data.date,completed:data.completed})
+  });
+ }catch(e){console.warn("Pulse progress sync pending",e);}
+}
+
 function updateDaily(){
  if(data.date!==localDay()){
   data=emptyProgress();
@@ -831,6 +846,7 @@ function finish(){
  data.completed[currentPeriod()]=true;
  store(KEY,data);
  updateDaily();
+ syncProgress();
  draw();
 
  $("progress").textContent=
