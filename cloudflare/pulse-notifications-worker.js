@@ -73,11 +73,35 @@ export default {
       if (typeof data.timezone !== "string" || data.timezone.length > 80) return json({ error: "Unsupported timezone" }, 400);
       try { new Intl.DateTimeFormat("en-GB", { timeZone: data.timezone }); }
       catch { return json({ error: "Unsupported timezone" }, 400); }
+      const previous=await env.PULSE_REMINDERS.get(key,"json");
       await env.PULSE_REMINDERS.put(key, JSON.stringify({
         subscription: data.subscription, preferences, timezone: data.timezone,
+        progress: previous?.progress || null,
         updatedAt: new Date().toISOString()
       }));
       return json({ saved: true, notificationsActive: false });
+    }
+    if (path === "/progress" && request.method === "POST") {
+      let input;
+      try { input=await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
+      if (!isValidSubscription(input.subscription)) return json({ error: "Invalid subscription" }, 400);
+      if (typeof input.date !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(input.date))
+        return json({ error: "Invalid date" }, 400);
+      const completed=input.completed;
+      if (!completed || ["morning","afternoon","evening"].some(p=>typeof completed[p]!=="boolean"))
+        return json({ error: "Invalid progress" }, 400);
+      const key=await subscriptionKey(input.subscription.endpoint);
+      const record=await env.PULSE_REMINDERS.get(key,"json");
+      if (!record || record.subscription?.keys?.auth!==input.subscription.keys.auth ||
+          record.subscription?.keys?.p256dh!==input.subscription.keys.p256dh)
+        return json({ error: "Save reminder settings first" }, 404);
+      // Progress can only be added, never cleared by a stale tab.
+      const prior=record.progress?.date===input.date?record.progress.completed:{};
+      const merged={};
+      for (const p of ["morning","afternoon","evening"])merged[p]=completed[p] || prior?.[p]===true;
+      record.progress={date:input.date,completed:merged};
+      await env.PULSE_REMINDERS.put(key,JSON.stringify(record));
+      return json({ saved:true, completed:merged });
     }
     return json({ error: "Not found" }, 404);
   }
