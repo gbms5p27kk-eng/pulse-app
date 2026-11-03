@@ -371,27 +371,34 @@ function store(key,value){
 let stage=localStorage.getItem(STAGE)||"";
 let selectedStage=stage;
 
-let data=getSaved(KEY);
-
-if(!data||data.date!==localDay())
- data={date:localDay(),count:0};
-
-data.count=Math.min(3,Math.max(0,Number(data.count)||0));
+const PERIODS=["morning","afternoon","evening"];
+function emptyProgress(){return {date:localDay(),completed:{morning:false,afternoon:false,evening:false},legacyCount:0};}
+function normaliseProgress(value){
+ if(!value||value.date!==localDay())return emptyProgress();
+ // Old versions only stored a count, not a time of day. Preserve that
+ // count without incorrectly claiming a specific period was completed.
+ const legacyCount=value.completed?Math.max(0,Math.min(3,Number(value.legacyCount)||0)):Math.max(0,Math.min(3,Number(value.count)||0));
+ const completed={};
+ for(const period of PERIODS)completed[period]=value.completed?.[period]===true;
+ return {date:localDay(),completed,legacyCount};
+}
+function currentPeriod(){
+ const hour=new Date().getHours();
+ return hour<12?"morning":hour<17?"afternoon":"evening";
+}
+let data=normaliseProgress(getSaved(KEY));
 
 function updateDaily(){
-
  if(data.date!==localDay()){
-  data={date:localDay(),count:0};
+  data=emptyProgress();
   store(KEY,data);
  }
-
+ const done=PERIODS.filter(period=>data.completed[period]).length;
  for(let i=0;i<3;i++)
-  $("tick"+i).textContent=i<data.count?"✓":"○";
-
- $("fill").style.width=(data.count/3*100)+"%";
-
- $("dailyCount").textContent=
- data.count+" of 3 sessions completed today";
+  $("tick"+i).textContent=data.completed[PERIODS[i]]?"✓":"○";
+ $("fill").style.width=(done/3*100)+"%";
+ $("dailyCount").textContent=done+" of 3 time-of-day sessions completed today"+
+  (data.legacyCount?" · "+data.legacyCount+" earlier session(s) saved before this update":"");
 }
 
 function showScreen(){
@@ -818,14 +825,11 @@ function finish(){
  running=false;
  paused=false;
 
- if(data.date!==localDay())
-  data={date:localDay(),count:0};
-
- if(data.count<3)
-  data.count++;
-
+ if(data.date!==localDay())data=emptyProgress();
+ // The period is determined when the exercise finishes.
+ // A second exercise in the same period does not complete another slot.
+ data.completed[currentPeriod()]=true;
  store(KEY,data);
-
  updateDaily();
  draw();
 
