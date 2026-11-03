@@ -280,6 +280,8 @@ Turn on notifications
 Turn on notifications to receive your daily reminders.
 </p>
 
+<button id="checkNotificationConnection" class="secondary" type="button">Check notification connection</button>
+<p id="notificationDiagnostics" class="reminder-note" role="status" aria-live="polite"></p>
 </div>
 
 <div class="card">
@@ -517,6 +519,35 @@ function updateNotificationUI(OneSignal){
  }
 
 }
+
+// Diagnostic only: confirms connection state, not delivery of scheduled reminders.
+$("checkNotificationConnection").onclick=async()=>{
+ const output=$("notificationDiagnostics");
+ output.textContent="Checking connections…";
+ let backend="unreachable";
+ try{
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),7000);
+  try{
+   const response=await fetch("https://pulse-notifications.9tphnhk7wb.workers.dev/health",{signal:controller.signal,cache:"no-store"});
+   if(response.ok){
+    const status=await response.json();
+    backend=status.storageConfigured===true?"connected":"online, storage missing";
+   }
+  }finally{clearTimeout(timeout);}
+ }catch(e){backend="unreachable";}
+ let push="not subscribed";
+ try{
+  const onesignal=await new Promise((resolve,reject)=>{
+   const timeout=setTimeout(()=>reject(new Error("OneSignal unavailable")),7000);
+   window.OneSignalDeferred=window.OneSignalDeferred||[];
+   window.OneSignalDeferred.push(sdk=>{clearTimeout(timeout);resolve(sdk);});
+  });
+  const subscribed=Boolean(onesignal.Notifications.permission&&onesignal.User.PushSubscription.optedIn);
+  push=subscribed?"permission and subscription enabled":"not subscribed";
+ }catch(e){push="could not verify";}
+ output.textContent="Phone push: "+push+". Pulse backend: "+backend+". Scheduled reminders: not active yet.";
+};
 
 $("enableNotifications").onclick=()=>{
 
