@@ -85,7 +85,7 @@ export default {
       let input;
       try { input=await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
       if (!isValidSubscription(input.subscription)) return json({ error: "Invalid subscription" }, 400);
-      if (typeof input.date !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(input.date))
+      if (typeof input.date !== "string" || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(input.date))
         return json({ error: "Invalid date" }, 400);
       const completed=input.completed;
       if (!completed || ["morning","afternoon","evening"].some(p=>typeof completed[p]!=="boolean"))
