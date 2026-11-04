@@ -1,6 +1,6 @@
 name: Deploy Pulse notifications to Cloudflare
 
-# Manual deployment only. The Worker is not ready to send push notifications.
+# Manual deployment; OneSignal delivery requires a Cloudflare Worker secret.
 on:
   workflow_dispatch:
 
@@ -32,6 +32,9 @@ jobs:
           name = "pulse-notifications"
           main = "cloudflare/pulse-notifications-worker.js"
           compatibility_date = "2026-11-02"
+
+          [triggers]
+          crons = ["* * * * *"]
 
           [[kv_namespaces]]
           binding = "PULSE_REMINDERS"
