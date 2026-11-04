@@ -539,6 +539,9 @@ $("saveReminderBackend").onclick=async()=>{
   for(const period of ["morning","afternoon","evening"]){
    preferences[period]={time:$(period+"Time").value,enabled:$(period+"On").checked};
   }
+  const oneSignal=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error("OneSignal unavailable")),7000);window.OneSignalDeferred=window.OneSignalDeferred||[];window.OneSignalDeferred.push(sdk=>{clearTimeout(timer);resolve(sdk);});});
+  const oneSignalSubscriptionId=oneSignal.User.PushSubscription.id;
+  if(!oneSignalSubscriptionId)throw new Error("OneSignal subscription ID unavailable. Try again shortly.");
   const response=await fetch("https://pulse-notifications.9tphnhk7wb.workers.dev/subscribe",{
    method:"POST",
    headers:{"Content-Type":"application/json"},
