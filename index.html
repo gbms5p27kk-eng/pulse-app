@@ -553,7 +553,7 @@ $("saveReminderBackend").onclick=async()=>{
   const progressSynced=await syncProgress();
   output.textContent="Reminder settings saved to Pulse ♡ "+
    (progressSynced.ok?"Completed sessions synced successfully ♡":"Completed sessions not yet synced ("+progressSynced.reason+").")+
-   " Automatic notifications are not active yet.";
+   " Automatic reminders are enabled ♡";
  }catch(error){
   output.textContent=error.message||"Couldn't save settings. Please try again.";
  }finally{button.disabled=false;}
@@ -589,6 +589,7 @@ $("checkNotificationConnection").onclick=async()=>{
  const output=$("notificationDiagnostics");
  output.textContent="Checking connections…";
  let backend="unreachable";
+ let scheduled="could not verify";
  try{
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),7000);
@@ -597,6 +598,7 @@ $("checkNotificationConnection").onclick=async()=>{
    if(response.ok){
     const status=await response.json();
     backend=status.storageConfigured===true?"connected":"online, storage missing";
+    scheduled=status.notificationsActive===true?"enabled":"not active";
    }
   }finally{clearTimeout(timeout);}
  }catch(e){backend="unreachable";}
@@ -610,7 +612,7 @@ $("checkNotificationConnection").onclick=async()=>{
   const subscribed=Boolean(onesignal.Notifications.permission&&onesignal.User.PushSubscription.optedIn);
   push=subscribed?"permission and subscription enabled":"not subscribed";
  }catch(e){push="could not verify";}
- output.textContent="Phone push: "+push+". Pulse backend: "+backend+". Scheduled reminders: not active yet.";
+ output.textContent="Phone push: "+push+". Pulse backend: "+backend+". Scheduled reminders: "+scheduled+".";
 };
 
 $("enableNotifications").onclick=()=>{
