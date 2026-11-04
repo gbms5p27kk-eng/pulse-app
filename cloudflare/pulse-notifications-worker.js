@@ -4,14 +4,63 @@
  * Deploy to the existing "pulse-notifications" Worker.
  * REQUIRED binding: KV namespace named PULSE_REMINDERS.
  *
- * This stage stores real browser push subscriptions and chosen reminder times.
- * It does NOT yet deliver notifications. Delivery requires VAPID encryption,
- * a configured sender key pair, and a scheduled trigger.
+ * Reminder delivery uses OneSignal's API and a Cloudflare cron trigger.
+ * Required secret: ONESIGNAL_REST_API_KEY. No key is exposed to browsers.
  *
  * Privacy: no account or email is collected. Push endpoint and encryption keys
  * are device-specific identifiers and must be handled as personal data.
  */
 const APP_ORIGIN = "https://gbms5p27kk-eng.github.io";
+const ONESIGNAL_APP_ID = "b5b28f65-852f-4a95-a39a-90a187650a50";
+const PERIODS = ["morning","afternoon","evening"];
+function localParts(date, timezone) {
+ const parts=new Intl.DateTimeFormat("en-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(date);
+ const fields=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+ return {date:fields.year+"-"+fields.month+"-"+fields.day,time:fields.hour+":"+fields.minute};
+}
+async function deliverReminders(env,now) {
+ if(!env.PULSE_REMINDERS||!env.ONESIGNAL_REST_API_KEY)return;
+ let cursor;
+ do {
+  const page=await env.PULSE_REMINDERS.list({prefix:"sub:",limit:500,...(cursor?{cursor}:{})});
+  for(const item of page.keys){
+   const record=await env.PULSE_REMINDERS.get(item.name,"json");
+   if(!record?.oneSignalSubscriptionId||!record.preferences||!record.timezone)continue;
+   let local;
+   try{local=localParts(now,record.timezone);}catch{continue;}
+   for(const period of PERIODS){
+    const preference=record.preferences[period];
+    if(!preference?.enabled||preference.time!==local.time)continue;
+    if(record.progress?.date===local.date&&record.progress.completed?.[period]===true)continue;
+    const marker="sent:"+item.name+":"+local.date+":"+period;
+    if(await env.PULSE_REMINDERS.get(marker))continue;
+    // Reserve before sending to reduce duplicates if a cron invocation overlaps.
+    // KV is eventually consistent, so this is best-effort, not exactly-once.
+    await env.PULSE_REMINDERS.put(marker,"reserved",{expirationTtl:172800});
+    try{
+     const response=await fetch("https://api.onesignal.com/notifications",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Key "+env.ONESIGNAL_REST_API_KEY},
+      body:JSON.stringify({
+       app_id:ONESIGNAL_APP_ID,
+       target_channel:"push",
+       include_subscription_ids:[record.oneSignalSubscriptionId],
+       headings:{en:"A little moment for you ♡"},
+       contents:{en:"Time for your "+period+" pelvic floor session ♡"},
+       url:"https://gbms5p27kk-eng.github.io/pulse-app/"
+      })
+     });
+     if(!response.ok)throw Error("OneSignal HTTP "+response.status);
+    }catch(error){
+     console.error("Pulse reminder delivery failed",period,String(error));
+     await env.PULSE_REMINDERS.delete(marker);
+    }
+   }
+  }
+  cursor=page.list_complete?null:page.cursor;
+ }while(cursor);
+}
+
 const HEADERS = {
   "Access-Control-Allow-Origin": APP_ORIGIN,
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
@@ -45,17 +94,20 @@ async function subscriptionKey(endpoint) {
   return "sub:" + Array.from(new Uint8Array(hash), x => x.toString(16).padStart(2, "0")).join("");
 }
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(deliverReminders(env,new Date(event.scheduledTime)));
+  },
   async fetch(request, env) {
     const origin = request.headers.get("Origin");
     if (origin && origin !== APP_ORIGIN) return json({ error: "Origin not allowed" }, 403);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: HEADERS });
     const path = new URL(request.url).pathname;
     if (path === "/health" && request.method === "GET") {
-      return json({ service: "pulse-notifications", status: "ready", notificationsActive: false,
+      return json({ service: "pulse-notifications", status: "ready", notificationsActive: !!env.ONESIGNAL_REST_API_KEY,
         storageConfigured: !!env.PULSE_REMINDERS });
     }
     if (path === "/config" && request.method === "GET") {
-      return json({ notificationsActive: false, publicKey: env.VAPID_PUBLIC_KEY || null });
+      return json({ notificationsActive: !!env.ONESIGNAL_REST_API_KEY });
     }
     if (!env.PULSE_REMINDERS) return json({ error: "Storage not configured" }, 503);
     if ((path === "/subscribe" && request.method === "POST") ||
@@ -74,12 +126,14 @@ export default {
       try { new Intl.DateTimeFormat("en-GB", { timeZone: data.timezone }); }
       catch { return json({ error: "Unsupported timezone" }, 400); }
       const previous=await env.PULSE_REMINDERS.get(key,"json");
+      const oneSignalSubscriptionId = typeof data.oneSignalSubscriptionId==="string" &&
+        /^[a-f0-9-]{36}$/i.test(data.oneSignalSubscriptionId) ? data.oneSignalSubscriptionId : previous?.oneSignalSubscriptionId || null;
       await env.PULSE_REMINDERS.put(key, JSON.stringify({
-        subscription: data.subscription, preferences, timezone: data.timezone,
+        subscription: data.subscription, oneSignalSubscriptionId, preferences, timezone: data.timezone,
         progress: previous?.progress || null,
         updatedAt: new Date().toISOString()
       }));
-      return json({ saved: true, notificationsActive: false });
+      return json({ saved: true, notificationsActive: !!env.ONESIGNAL_REST_API_KEY, pushTargetSaved:!!oneSignalSubscriptionId });
     }
     if (path === "/progress" && request.method === "POST") {
       let input;
