@@ -34,7 +34,7 @@ jobs:
           compatibility_date = "2026-11-02"
 
           [triggers]
-          crons = ["* * * * *"]
+          crons = ["*/5 * * * *"]
 
           [[kv_namespaces]]
           binding = "PULSE_REMINDERS"
