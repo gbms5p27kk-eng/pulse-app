@@ -171,6 +171,14 @@ small{color:#856774;line-height:1.5;display:block}
 <section id="home" class="hidden">
 
 <button class="link" id="changeStage">Change my stage</button>
+<div id="firstSteps" class="card hidden" style="text-align:left;border:1px solid #E9CED7">
+<h2 style="text-align:center">Welcome to your little daily ritual ♡</h2>
+<p>Start with a gentle session whenever you feel ready. Pulse will guide you through each squeeze and release.</p>
+<p><strong>1.</strong> Scroll to Your exercise and tap Start session.</p>
+<p><strong>2.</strong> Choose your morning, afternoon and evening reminder times.</p>
+<p><strong>3.</strong> Turn on notifications, then tap Save my reminders to activate them.</p>
+<button id="dismissFirstSteps" type="button">Got it ♡</button>
+</div>
 
 <div class="card">
 
@@ -354,6 +362,7 @@ const KEY="pulseProgress";
 const STAGE="pulseStage";
 const SETTINGS="pulseSettings";
 const REMINDERS="pulseReminders";
+const FIRST_STEPS="pulseFirstStepsSeen";
 
 function localDay(){
  const d=new Date();
@@ -431,6 +440,7 @@ function showScreen(){
  );
 
  $("continue").disabled=!selectedStage;
+ $("firstSteps").classList.toggle("hidden",!stage||localStorage.getItem(FIRST_STEPS)==="yes");
 }
 
 document.querySelectorAll(".choice").forEach(b=>{
@@ -448,6 +458,11 @@ $("continue").onclick=()=>{
  localStorage.setItem(STAGE,stage);
  showScreen();
 
+};
+
+$("dismissFirstSteps").onclick=()=>{
+ localStorage.setItem(FIRST_STEPS,"yes");
+ $("firstSteps").classList.add("hidden");
 };
 
 $("changeStage").onclick=()=>{
