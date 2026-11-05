@@ -280,10 +280,12 @@ Turn on notifications
 Turn on notifications to receive your daily reminders.
 </p>
 
+<button id="saveReminderBackend" type="button">Save my reminders ♡</button>
+<p id="backendSaveStatus" class="reminder-note" role="status" aria-live="polite">Choose your times, then tap Save my reminders to activate your schedule.</p>
+<details style="margin-top:16px"><summary style="cursor:pointer;color:#8e6e7d;font-size:0.9rem">Having trouble with reminders?</summary>
 <button id="checkNotificationConnection" class="secondary" type="button">Check notification connection</button>
-<button id="saveReminderBackend" class="secondary" type="button">Save reminder times to Pulse</button>
-<p id="backendSaveStatus" class="reminder-note" role="status" aria-live="polite">Reminder times are currently saved on this phone only. Saving them to Pulse is optional and does not activate delivery.</p>
 <p id="notificationDiagnostics" class="reminder-note" role="status" aria-live="polite"></p>
+</details>
 </div>
 
 <div class="card">
@@ -511,14 +513,7 @@ function saveReminders(){
  }
 
  store(REMINDERS,preferences);
-
- if($("reminderStatus").textContent.includes("Notifications are on")){
-  $("reminderStatus").textContent=
-  "Preferences saved ♡ Notifications are on.";
- }else{
-  $("reminderStatus").textContent=
-  "Preferences saved ♡";
- }
+ $("backendSaveStatus").textContent="Changes saved on this phone. Tap Save my reminders to update your notifications ♡";
 
 }
 
@@ -551,9 +546,9 @@ $("saveReminderBackend").onclick=async()=>{
   const result=await response.json();
   if(!result.saved)throw new Error("Pulse did not confirm the save.");
   const progressSynced=await syncProgress();
-  output.textContent="Reminder settings saved to Pulse ♡ "+
-   (progressSynced.ok?"Completed sessions synced successfully ♡":"Completed sessions not yet synced ("+progressSynced.reason+").")+
-   " Automatic reminders are enabled ♡";
+  output.textContent=progressSynced.ok
+    ?"Your reminders are saved and switched on ♡"
+    :"Your reminder times are saved ♡ Session progress could not sync yet. Please try saving again.";
  }catch(error){
   output.textContent=error.message||"Couldn't save settings. Please try again.";
  }finally{button.disabled=false;}
