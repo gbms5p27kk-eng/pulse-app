@@ -30,7 +30,16 @@ async function deliverReminders(env,now) {
    try{local=localParts(now,record.timezone);}catch{continue;}
    for(const period of PERIODS){
     const preference=record.preferences[period];
-    if(!preference?.enabled||preference.time!==local.time)continue;
+    if(!preference?.enabled)continue;
+    // The cron runs every five minutes. Cover the preceding five local clock
+    // minutes so user-selected times do not need to land on a cron boundary.
+    // Compare real instants before formatting to handle DST transitions safely.
+    let due=false;
+    for(let offset=0;offset<5;offset++){
+     const candidate=localParts(new Date(now.getTime()-offset*60000),record.timezone);
+     if(candidate.date===local.date&&candidate.time===preference.time){due=true;break;}
+    }
+    if(!due)continue;
     if(record.progress?.date===local.date&&record.progress.completed?.[period]===true)continue;
     const marker="sent:"+item.name+":"+local.date+":"+period;
     if(await env.PULSE_REMINDERS.get(marker))continue;
