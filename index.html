@@ -294,7 +294,9 @@ Turn on notifications to receive your daily reminders.
 <p class="reminder-note">Switch off any reminder you don’t want, or switch off all three to pause them. Tap Save my reminders to apply your changes. You can switch them back on whenever you like.</p>
 </details>
 <details style="margin-top:12px"><summary style="cursor:pointer;color:#8e6e7d;font-size:0.9rem">How Pulse uses your reminder information</summary>
-<p class="reminder-note">Pulse does not ask you to create an account. Your exercise preferences and daily progress are saved on this device. If you save push reminders, Pulse also stores your reminder schedule, time zone, device notification identifiers and completed daily sessions with its notification service so it can send reminders and avoid nudging you for sessions you've finished. Push delivery uses OneSignal. You can pause reminders using the switches above and tapping Save my reminders.</p>
+<p class="reminder-note">Pulse does not ask you to create an account. Your exercise preferences and daily progress are saved on this device. If you save push reminders, Pulse also stores your reminder schedule, time zone, device notification identifiers and completed daily sessions with its notification service so it can send reminders and avoid nudging you for sessions you\'ve finished. Push delivery uses OneSignal. You can pause reminders above, or remove your device\'s reminder record below. Removing the record does not delete your on-phone exercise progress or your OneSignal subscription.</p>
+<button id="deleteReminderData" class="secondary" type="button">Stop reminders & delete notification details</button>
+<p id="deleteReminderStatus" class="reminder-note" role="status" aria-live="polite"></p>
 </details>
 <details style="margin-top:12px"><summary style="cursor:pointer;color:#8e6e7d;font-size:0.9rem">Having trouble with reminders?</summary>
 <button id="checkNotificationConnection" class="secondary" type="button">Check notification connection</button>
@@ -571,6 +573,32 @@ $("saveReminderBackend").onclick=async()=>{
  }catch(error){
   output.textContent=error.message||"Couldn't save settings. Please try again.";
  }finally{button.disabled=false;}
+};
+
+$("deleteReminderData").onclick=async()=>{
+ const button=$("deleteReminderData");
+ const output=$("deleteReminderStatus");
+ if(!confirm("Stop all Pulse reminders and delete this device's reminder details from Pulse? Your exercise progress on this phone will stay."))return;
+ button.disabled=true;
+ output.textContent="Removing your reminder details…";
+ try{
+  if(!("serviceWorker" in navigator)||!("PushManager" in window))throw new Error("Push isn't available on this device.");
+  const registration=await navigator.serviceWorker.ready;
+  const subscription=await registration.pushManager.getSubscription();
+  if(!subscription)throw new Error("No device push subscription found. Please contact Pulse support if reminders still arrive.");
+  const response=await fetch("https://pulse-notifications.9tphnhk7wb.workers.dev/unsubscribe",{
+   method:"DELETE",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({subscription:subscription.toJSON()})
+  });
+  if(!response.ok)throw new Error("Could not remove reminder details (code "+response.status+"). Please try again.");
+  const result=await response.json();
+  if(!result.deleted)throw new Error("Pulse did not confirm deletion.");
+  for(const period of ["morning","afternoon","evening"])$(period+"On").checked=false;
+  saveReminders();
+  output.textContent="Your Pulse reminder details were removed ♡ Your exercise progress is unchanged.";
+  $("backendSaveStatus").textContent="Reminders stopped. You can turn them on and save again whenever you like.";
+ }catch(error){output.textContent=error.message||"Couldn't stop reminders. Please try again.";}
+ finally{button.disabled=false;}
 };
 
 function updateNotificationUI(OneSignal){
