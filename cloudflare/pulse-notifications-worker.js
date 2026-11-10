@@ -126,8 +126,15 @@ export default {
       if (!isValidSubscription(data.subscription)) return json({ error: "Invalid subscription" }, 400);
       const key = await subscriptionKey(data.subscription.endpoint);
       if (request.method === "DELETE") {
-        // Subscription ownership must be proven before enabling this endpoint publicly.
-        return json({ error: "Unsubscribe is not enabled yet" }, 501);
+        // Match the device's push encryption keys before removing its record.
+        // Do not accept an endpoint alone as proof of subscription ownership.
+        const record = await env.PULSE_REMINDERS.get(key, "json");
+        if (!record) return json({ deleted: true });
+        if (record.subscription?.keys?.auth !== data.subscription.keys.auth ||
+            record.subscription?.keys?.p256dh !== data.subscription.keys.p256dh)
+          return json({ error: "Subscription does not match this device" }, 403);
+        await env.PULSE_REMINDERS.delete(key);
+        return json({ deleted: true });
       }
       const preferences = validatePreferences(data.preferences);
       if (!preferences) return json({ error: "Invalid reminder preferences" }, 400);
