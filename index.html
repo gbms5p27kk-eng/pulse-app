@@ -876,7 +876,7 @@ function draw(){
 
  $("start").textContent=
  running
- ?"Session running"
+ ?(paused?"Session paused":"Session running")
  :"Start session";
 
  $("pause").classList.toggle(
