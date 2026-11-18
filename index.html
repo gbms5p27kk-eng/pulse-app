@@ -858,7 +858,7 @@ function draw(){
  $("circle").classList.toggle("hidden",!running);
 
  $("phase").textContent=
- phase==="squeeze"?"Squeeze":"Relax";
+ paused?"Paused":(phase==="squeeze"?"Squeeze":"Relax");
 
  $("seconds").textContent=remaining;
 
