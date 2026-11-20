@@ -217,6 +217,53 @@ small{color:#856774;line-height:1.5;display:block}
 
 <div class="card">
 
+<h2>Your exercise</h2>
+
+<div class="row">
+<button id="slowBtn">Long holds</button>
+<button id="quickBtn" class="secondary">Pulses</button>
+</div>
+
+<p id="exerciseHelp">
+Long holds: gently lift and squeeze your pelvic floor, hold comfortably, then relax fully.
+</p>
+
+<div class="row">
+
+<div class="field">
+Squeeze time
+<select id="squeezeTime"></select>
+</div>
+
+<div class="field">
+Relax time
+<select id="relaxTime"></select>
+</div>
+
+</div>
+
+<div class="circle hidden" id="circle">
+
+<div class="phase" id="phase">Squeeze</div>
+<div class="seconds" id="seconds">3</div>
+
+</div>
+
+<p id="progress">10 gentle repetitions</p>
+
+<button id="start">Start session</button>
+<button id="pause" class="secondary hidden">Pause</button>
+<button id="reset" class="secondary">Reset</button>
+
+<label class="toggle">
+<input type="checkbox" id="voice" checked>
+Voice guidance on
+</label>
+
+</div>
+
+<div class="card">
+
 <h2>Gentle reminders ♡</h2>
 <p>A little nudge to take a moment for yourself.</p>
 
@@ -305,53 +352,6 @@ Turn on notifications to receive your daily reminders.
 <button id="checkNotificationConnection" class="secondary" type="button">Check notification connection</button>
 <p id="notificationDiagnostics" class="reminder-note" role="status" aria-live="polite"></p>
 </details>
-</div>
-
-<div class="card">
-
-<h2>Your exercise</h2>
-
-<div class="row">
-<button id="slowBtn">Long holds</button>
-<button id="quickBtn" class="secondary">Pulses</button>
-</div>
-
-<p id="exerciseHelp">
-Long holds: gently lift and squeeze your pelvic floor, hold comfortably, then relax fully.
-</p>
-
-<div class="row">
-
-<div class="field">
-Squeeze time
-<select id="squeezeTime"></select>
-</div>
-
-<div class="field">
-Relax time
-<select id="relaxTime"></select>
-</div>
-
-</div>
-
-<div class="circle hidden" id="circle">
-
-<div class="phase" id="phase">Squeeze</div>
-<div class="seconds" id="seconds">3</div>
-
-</div>
-
-<p id="progress">10 gentle repetitions</p>
-
-<button id="start">Start session</button>
-<button id="pause" class="secondary hidden">Pause</button>
-<button id="reset" class="secondary">Reset</button>
-
-<label class="toggle">
-<input type="checkbox" id="voice" checked>
-Voice guidance on
-</label>
-
 </div>
 
 <p><strong>A little technique tip ♡</strong></p>
